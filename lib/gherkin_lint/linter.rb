@@ -73,12 +73,6 @@ module GherkinLint
       lint
     end
 
-    def tag?(data, tag)
-      return false if data.class != Hash
-      return false unless data.key? 'tags'
-      data['tags'].map { |item| item['name'] }.include? "@#{tag}"
-    end
-
     def filter_tag(data, tag)
       return data.select { |item| !tag?(item, tag) }.map { |item| filter_tag(item, tag) } if data.class == Array
       return data unless data.class == Hash
@@ -88,8 +82,10 @@ module GherkinLint
       result
     end
 
-    def suppress(data, tags)
-      data.select { |item| !tags.map { |tag| "@#{tag}" }.include? item['name'] }
+    def tag?(data, tag)
+      return false if data.class != Hash
+      return false unless data.key? 'tags'
+      data['tags'].map { |item| item['name'] }.include? "@#{tag}"
     end
 
     def suppress_tags(data, tags)
@@ -103,6 +99,10 @@ module GherkinLint
         result[key] = suppress_tags(value, tags)
       end
       result
+    end
+
+    def suppress(data, tags)
+      data.select { |item| !tags.map { |tag| "@#{tag}" }.include? item['name'] }
     end
 
     def lint
@@ -124,8 +124,12 @@ module GherkinLint
       line
     end
 
-    def add_issue(references, description = nil)
-      @issues.push Issue.new(name, references, description)
+    def add_error(references, description = nil)
+      @issues.push Error.new(name, references, description)
+    end
+
+    def add_warning(references, description = nil)
+      @issues.push Warning.new(name, references, description)
     end
 
     def gather_tags(element)
